@@ -527,6 +527,7 @@ import os
 from datetime import datetime
 from mitmproxy import ctx, http
 
+<<<<<<< HEAD
 # File name for blocked domains and paths
 file_name = "Blocked_host"
 
@@ -561,8 +562,12 @@ def load_blocked_data():
     print("Blocked domains and paths have been loaded.")
     print(f"Blocked domains: {blocked_domains}")
     print(f"Blocked paths: {blocked_paths}")
+=======
+blocked_domains = ["gemini.google.com","sydney.bing.com","copilot.microsoft.com","ads.google.com","googleads.g.doubleclick.net"]
+blocked_paths = ["/ads","/watch?v=oPsxy9JF8FM","/@havox_cybernet"]
+>>>>>>> d5fbd821ea5a4f7fd5abdf15daedad2c15ac3c58
 
-proxy_enabled = False
+proxy_enabled = False  
 
 class Logger:
     def __init__(self):
@@ -600,7 +605,7 @@ class Logger:
         log_message += f"Source IP: {source_ip}:{source_port}\n"
         log_message += f"Destination IP: {dest_ip}:{dest_port}\n"
         log_message += f"Port: {flow.request.port}\n"
-        log_message += f"Protocol: HTTP\n"
+        log_message += f"Protocol: HTTP\n"  # HTTP protocol for all responses
         log_message += f"Event ID: RESPONSE\n"
         log_message += f"Severity Level: Info\n"
         log_message += "=======================\n\n"
@@ -616,6 +621,10 @@ logger = Logger()
 def enable_proxy():
     global proxy_enabled
     try:
+<<<<<<< HEAD
+=======
+        
+>>>>>>> d5fbd821ea5a4f7fd5abdf15daedad2c15ac3c58
         command_proxy = r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "http=127.0.0.1:8080;https=127.0.0.1:8080;ftp=127.0.0.1:8080" /f'
         subprocess.run(command_proxy, shell=True, check=True)
 
@@ -635,6 +644,7 @@ def registry_value_exists(key, value):
 def disable_proxy():
     global proxy_enabled
     try:
+       
         proxy_key = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"
         if registry_value_exists(proxy_key, "ProxyServer"):
             command_disable_proxy = f'reg delete "{proxy_key}" /v ProxyServer /f'
@@ -651,6 +661,7 @@ def disable_proxy():
 
 def start_mitmproxy():
     try:
+      
         enable_proxy()
 
         command = [
@@ -664,11 +675,17 @@ def start_mitmproxy():
         mitmdump_process = subprocess.Popen(command)
 
         try:
+
             mitmdump_process.wait()
         except KeyboardInterrupt:
             print("\nCtrl+C detected. Stopping and disabling the server...")
+<<<<<<< HEAD
+=======
+            disable_proxy()
+>>>>>>> d5fbd821ea5a4f7fd5abdf15daedad2c15ac3c58
             sys.exit(0)
         finally:
+         
             disable_proxy()
     except Exception as e:
         print(f"Error starting mitmdump: {e}")
@@ -676,12 +693,17 @@ def start_mitmproxy():
         sys.exit(1)
 
 def request(flow: http.HTTPFlow) -> None:
+<<<<<<< HEAD
     # Load the latest blocked domains and paths
     load_blocked_data()
+=======
+    global blocked_domains, blocked_paths
+>>>>>>> d5fbd821ea5a4f7fd5abdf15daedad2c15ac3c58
     
     if flow.request.pretty_url.startswith("http://") or flow.request.pretty_url.startswith("https://"):
         logger.log_request(flow)
 
+<<<<<<< HEAD
         # Check for exact domain match or subdomain match
         if any(flow.request.host == domain or flow.request.host.endswith('.' + domain) for domain in blocked_domains):
             respond_with_custom_html(flow)
@@ -714,6 +736,28 @@ def response(flow: http.HTTPFlow) -> None:
     # Log response details
     if flow.response:
         logger.log_response(flow)
+=======
+        if any(domain in flow.request.host for domain in blocked_domains) or any(path in flow.request.path for path in blocked_paths):
+            with open("web_warning.html", "rb") as f:
+                html_content = f.read()
+            flow.response = http.HTTPResponse.make(
+                403,  
+                html_content,  
+                {"Content-Type": "text/html"} 
+            )
+            print(f"Blocked a request to {flow.request.pretty_url}")
+
+def response(flow: http.HTTPFlow) -> None:
+    global blocked_domains, blocked_paths
+    
+    if flow.response:
+        logger.log_response(flow)
+
+        if any(domain in flow.request.host for domain in blocked_domains) or any(path in flow.request.path for path in blocked_paths):
+            with open("web_warning.html", "rb") as f:
+                html_content = f.read()
+            flow.response.content = html_content
+>>>>>>> d5fbd821ea5a4f7fd5abdf15daedad2c15ac3c58
 
 def main():
     # Clear and load block list at the start of the program
